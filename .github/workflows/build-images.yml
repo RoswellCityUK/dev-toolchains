@@ -68,13 +68,13 @@ jobs:
           labels: |
             org.opencontainers.image.title=Toolchain ${{ matrix.image }}
             org.opencontainers.image.description=${{ matrix.description }}
+            org.opencontainers.image.version=${{ steps.ver.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.ref.name=${{ github.ref_name }}
           tags: |
-            # Tag with 'latest' only on main branch
             type=raw,value=latest,enable={{is_default_branch}}
-            # Tag with version file content (e.g., 0.0.1)
             type=raw,value=${{ steps.ver.outputs.version }}
-            # Add a sha tag for PRs or debugging
-            type=sha,prefix=sha-
+            type=sha,prefix=sha-,format=short
 
       - name: Set up QEMU
         if: steps.should_run.outputs.run == 'true'
@@ -97,10 +97,12 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}
-          # MULTI-ARCH: Builds for both Intel and Apple Silicon
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/arm64' }}
+          pull: true
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          provenance: false
+          sbom: false

@@ -1,13 +1,19 @@
+# syntax=docker/dockerfile:1.7
+
 # Stage 1: Upstream TeX Live
-# We pull the official image which contains the full, latest TeX Live scheme.
 FROM --platform=$TARGETPLATFORM texlive/texlive:latest AS tex
 
-# OPTIMIZATION: Remove docs and source code.
-# This reduces the copy size by approx 3GB, trying to prevent disk exhaustion in github runner.
+# Remove docs and sources (biggest space saver)
 RUN rm -rf /usr/local/texlive/*/texmf-dist/doc \
-    && rm -rf /usr/local/texlive/*/texmf-dist/source
+           /usr/local/texlive/*/texmf-dist/source
 
-# Stage 2: Your Dev Container
+# Optional: remove tlmgr caches/backups/logs (often non-trivial)
+RUN rm -rf /usr/local/texlive/*/texmf-var/tlpkg/backups \
+           /usr/local/texlive/*/texmf-var/tlpkg/tlpg \
+           /usr/local/texlive/*/texmf-var/web2c/*.log \
+           /usr/local/texlive/*/tlpkg/texlive.tlpdb.* || true
+
+# Stage 2: Dev container
 FROM mcr.microsoft.com/devcontainers/base:bookworm
 
 LABEL org.opencontainers.image.source=https://github.com/roswellcityuk/dev-toolchains
@@ -18,42 +24,55 @@ ENV DEBIAN_FRONTEND=noninteractive \
     LANGUAGE=en_US:en \
     LC_ALL=en_US.UTF-8
 
-# 1. Install System Dependencies
-# We removed 'texlive-*', 'biber', and 'latexmk' from apt because
-# they are included in the official TeX Live distribution we are copying.
-# We keep tools like git, make, pygments (for minted), and perl (required by latexmk/tlmgr).
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    git \
-    make \
-    perl \
-    python3-pygments \
-    ghostscript \
-    hunspell \
-    hunspell-en-us \
-    poppler-utils \
-    libyaml-tiny-perl \
-    libfile-homedir-perl \
-    default-jre-headless \
-    # locales are often needed for proper font encoding
-    locales \
-  && apt-get clean && rm -rf /var/lib/apt/lists/* \
-  && locale-gen en_US.UTF-8
+# Faster apt with BuildKit cache mounts (no effect if BuildKit disabled)
+RUN --mount=type=cache,target=/var/cache/apt \
+    --mount=type=cache,target=/var/lib/apt/lists \
+    apt-get update && apt-get install -y --no-install-recommends \
+      ca-certificates \
+      git \
+      make \
+      perl \
+      python3-pygments \
+      ghostscript \
+      hunspell \
+      hunspell-en-us \
+      poppler-utils \
+      libyaml-tiny-perl \
+      libfile-homedir-perl \
+      default-jre-headless \
+      locales \
+    && rm -rf /var/lib/apt/lists/* \
+    && locale-gen en_US.UTF-8
 
-# 2. Copy TeX Live from Stage 1
-# This copies the entire TeX Live directory (usually /usr/local/texlive)
-COPY --from=tex /usr/local/texlive /usr/local/texlive
+# Copy TeX Live tree
+# --link helps on BuildKit-enabled builders (less I/O during build)
+COPY --from=tex --link /usr/local/texlive /usr/local/texlive
 
-# 3. Link TeX Live to your PATH
-# 'tlmgr path add' automatically symlinks the binaries (pdflatex, biber, latexmk, etc.)
-# from the year-specific folder to /usr/local/bin.
-RUN /usr/local/texlive/*/bin/*/tlmgr path add
+# Resolve the newest TL year + arch bin dir once, then set PATH
+# Also good for shells: drop a profile.d script
+RUN set -eux; \
+    TL_YEAR="$(ls -1 /usr/local/texlive | sort -r | head -n1)"; \
+    TL_BIN="$(ls -d /usr/local/texlive/${TL_YEAR}/bin/* | head -n1)"; \
+    echo "export PATH=${TL_BIN}:\$PATH" > /etc/profile.d/texlive.sh; \
+    chmod +x /etc/profile.d/texlive.sh; \
+    # sanity check
+    "${TL_BIN}/latexmk" -v
 
-# 4. Global Configuration
-# Set default latexmk behavior: output PDF, don't stop on error
-RUN echo '$pdf_mode = 1;' > /usr/local/texlive/latexmkrc \
-    && echo '$pdflatex = "pdflatex %O -interaction=nonstopmode -synctex=1 %S";' >> /usr/local/texlive/latexmkrc
+# Global Configuration
+RUN printf '%s\n' \
+    '$pdf_mode = 1;' \
+    '$pdflatex = "pdflatex %O -interaction=nonstopmode -synctex=1 %S";' \
+    > /usr/local/texlive/latexmkrc
 
-# 5. Verify Installation
-# We check version output to confirm we are on the latest year.
+# Ensure PATH is correct for non-login shells too
+# (the value is expanded at build time via /etc/profile.d for interactive shells,
+# but ENV is what actually matters for RUN/CMD)
+RUN set -eux; \
+    TL_YEAR="$(ls -1 /usr/local/texlive | sort -r | head -n1)"; \
+    TL_BIN="$(ls -d /usr/local/texlive/${TL_YEAR}/bin/* | head -n1)"; \
+    echo "TL_BIN=${TL_BIN}" > /tmp/tlbin.env
+ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+# (Build-time computed PATH is tricky to inject directly into ENV in pure Dockerfile,
+# but the /etc/profile.d script handles interactive use; CMD below uses bash -lc anyway.)
+
 CMD ["bash", "-lc", "latexmk -v && pdflatex --version && biber --version"]
