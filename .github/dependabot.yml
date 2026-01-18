@@ -1,0 +1,13 @@
+version: 2
+updates:
+  # Maintain Dockerfile base image LateX toolchain
+  - package-ecosystem: "docker"
+    directory: "/images/latex"
+    schedule:
+      interval: "weekly"
+
+  # Maintain GitHub Actions in the workflow
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"

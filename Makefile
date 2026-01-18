@@ -20,8 +20,12 @@ push-%:
 
 test-%:
 	$(eval VERSION := $(shell cat images/$*/VERSION))
-	# Sanity check: Compile a minimal LaTeX document to verify the toolchain works
 	@echo "Testing $(REGISTRY)/toolchain-$*:$(VERSION)..."
 	docker run --rm $(REGISTRY)/toolchain-$*:$(VERSION) \
-		bash -c "echo '\documentclass{article}\begin{document}Hello World\end{document}' > test.tex && pdflatex test.tex" \
-		&& echo "✅ Test Passed: PDF compiled successfully."
+		bash -c "latexmk -v && biber -v && pygmentize -V"
+	docker run --rm $(REGISTRY)/toolchain-$*:$(VERSION) \
+		bash -c "echo '\documentclass{article}\begin{document}Hello\end{document}' > test.tex && pdflatex test.tex"
+	@echo "✅ All Tests Passed."
+
+clean:
+	docker buildx rm dev-builder || true

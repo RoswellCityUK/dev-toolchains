@@ -12,6 +12,7 @@ LaTeX development toolchain image for VS Code Dev Containers.
 
 ## ⚠️ Known Limitations
 - **Documentation Removed:** To save ~3GB of space, the `texdoc` command and all TeX package documentation have been removed from this image. If you need to read package documentation, please use [CTAN](https://ctan.org) or `texdoc.org`.
+- The vscode user has passwordless sudo access. To install missing TeX packages, use: sudo tlmgr install <package_name>
 
 ## Image
 `ghcr.io/roswellcityuk/toolchain-latex`
