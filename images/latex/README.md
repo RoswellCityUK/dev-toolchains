@@ -25,7 +25,7 @@ LaTeX development toolchain image for VS Code Dev Containers.
   "image": "ghcr.io/roswellcityuk/toolchain-latex:texlive-2024",
   "customizations": {
     "vscode": {
-      "extensions": ["james-yu.latex-workshop"],
+      "extensions": ["james-yu.latex-workshop", "ban.spellright", "valentjn.vscode-ltex"],
       "settings": {
         "latex-workshop.latex.autoBuild.run": "onSave",
         "latex-workshop.latex.outDir": "%DIR%/out",

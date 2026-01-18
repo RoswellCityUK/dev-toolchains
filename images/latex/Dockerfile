@@ -1,5 +1,8 @@
 FROM mcr.microsoft.com/devcontainers/base:bookworm
 
+LABEL org.opencontainers.image.source=https://github.com/roswellcityuk/dev-toolchains
+LABEL org.opencontainers.image.description="LaTeX Dev Container based on Debian Bookworm"
+
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Core TeX + tooling used by LaTeX Workshop (latexmk) and biblatex (biber).

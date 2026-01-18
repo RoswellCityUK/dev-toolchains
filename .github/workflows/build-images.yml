@@ -1,0 +1,97 @@
+name: Build & Publish Images
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  # Schedule a weekly build to pick up security updates from the base OS
+  schedule:
+    - cron: '0 0 * * 1' # Every Monday at midnight
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: latex
+            context: images/latex
+            description: "LaTeX toolchain based on TeX Live and Debian"
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            src:
+              - '${{ matrix.context }}/**'
+              - '.github/workflows/build-images.yml'
+
+      # Only run if files changed OR it's a scheduled/manual run
+      - name: Should run?
+        id: should_run
+        if: steps.filter.outputs.src == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: echo "run=true" >> $GITHUB_OUTPUT
+
+      - name: Read Version
+        if: steps.should_run.outputs.run == 'true'
+        id: ver
+        run: echo "version=$(cat ${{ matrix.context }}/VERSION)" >> $GITHUB_OUTPUT
+
+      # AUTOMATED METADATA: Handles labels and tagging logic automatically
+      - name: Docker Metadata
+        if: steps.should_run.outputs.run == 'true'
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/toolchain-${{ matrix.image }}
+          labels: |
+            org.opencontainers.image.title=Toolchain ${{ matrix.image }}
+            org.opencontainers.image.description=${{ matrix.description }}
+          tags: |
+            # Tag with 'latest' only on main branch
+            type=raw,value=latest,enable={{is_default_branch}}
+            # Tag with version file content (e.g., 0.0.1)
+            type=raw,value=${{ steps.ver.outputs.version }}
+            # Tag with 'texlive-2024' (or strictly 'bookworm' to be accurate)
+            type=raw,value=texlive-2024
+            # Add a sha tag for PRs or debugging
+            type=sha,prefix=sha-
+
+      - name: Set up QEMU
+        if: steps.should_run.outputs.run == 'true'
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        if: steps.should_run.outputs.run == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        if: steps.should_run.outputs.run == 'true' && github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push
+        if: steps.should_run.outputs.run == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          # MULTI-ARCH: Builds for both Intel and Apple Silicon
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
