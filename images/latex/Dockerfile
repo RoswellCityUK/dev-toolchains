@@ -1,6 +1,6 @@
 # Stage 1: Upstream TeX Live
 # We pull the official image which contains the full, latest TeX Live scheme.
-FROM --platform=$TARGETPLATFORM texlive/texlive:latest AS tex
+FROM texlive/texlive:latest AS tex
 
 # OPTIMIZATION: Remove docs and source code.
 # This reduces the copy size by approx 3GB, trying to prevent disk exhaustion in github runner.
