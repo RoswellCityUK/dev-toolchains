@@ -1,0 +1,21 @@
+{
+  "name": "dev-toolchains",
+  "image": "mcr.microsoft.com/devcontainers/base:bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-azuretools.vscode-docker",
+        "timonwong.shellcheck",
+        "redhat.vscode-yaml"
+      ],
+      "settings": {
+        "files.trimTrailingWhitespace": true
+      }
+    }
+  },
+  "postCreateCommand": "docker version && docker buildx version || true",
+  "remoteUser": "vscode"
+}
