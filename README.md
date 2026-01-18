@@ -7,6 +7,6 @@ A mono-repo of reusable development toolchain Docker images (devcontainers + CI-
 
 ## Publishing
 Images are published to GHCR:
-- `ghcr.io/RoswellCityUk/toolchain-latex`
+- `ghcr.io/roswellcityuk/toolchain-latex`
 
 See `images/latex/README.md` for usage.
