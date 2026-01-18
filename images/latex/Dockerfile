@@ -2,6 +2,11 @@
 # We pull the official image which contains the full, latest TeX Live scheme.
 FROM texlive/texlive:latest AS tex
 
+# OPTIMIZATION: Remove docs and source code.
+# This reduces the copy size by approx 3GB, trying to prevent disk exhaustion in github runner.
+RUN rm -rf /usr/local/texlive/*/texmf-dist/doc \
+    && rm -rf /usr/local/texlive/*/texmf-dist/source
+
 # Stage 2: Your Dev Container
 FROM mcr.microsoft.com/devcontainers/base:bookworm
 
@@ -11,7 +16,7 @@ LABEL org.opencontainers.image.description="LaTeX Dev Container based on Debian 
 ENV DEBIAN_FRONTEND=noninteractive
 
 # 1. Install System Dependencies
-# We removed 'texlive-*', 'biber', and 'latexmk' from apt because 
+# We removed 'texlive-*', 'biber', and 'latexmk' from apt because
 # they are included in the official TeX Live distribution we are copying.
 # We keep tools like git, make, pygments (for minted), and perl (required by latexmk/tlmgr).
 RUN apt-get update && apt-get install -y --no-install-recommends \
