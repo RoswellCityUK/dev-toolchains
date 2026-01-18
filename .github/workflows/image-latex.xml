@@ -7,7 +7,6 @@ on:
     paths:
       - "images/latex/**"
       - ".github/workflows/image-latex.yml"
-      - "Makefile"
   workflow_dispatch:
 
 permissions:
