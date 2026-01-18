@@ -1,32 +1,41 @@
+# Stage 1: Upstream TeX Live (Always Latest)
+# We pull the official image which contains the full, latest TeX Live scheme.
+FROM texlive/texlive:latest AS tex
+
+# Stage 2: Your Dev Container
 FROM mcr.microsoft.com/devcontainers/base:bookworm
 
 LABEL org.opencontainers.image.source=https://github.com/roswellcityuk/dev-toolchains
-LABEL org.opencontainers.image.description="LaTeX Dev Container based on Debian Bookworm"
+LABEL org.opencontainers.image.description="LaTeX Dev Container based on Debian Bookworm (Latest TeX Live)"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Core TeX + tooling used by LaTeX Workshop (latexmk) and biblatex (biber).
+# 1. Install System Dependencies
+# We removed 'texlive-*', 'biber', and 'latexmk' from apt because 
+# they are included in the official TeX Live distribution we are copying.
+# We keep tools like git, make, pygments (for minted), and perl (required by latexmk/tlmgr).
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     git \
     make \
-    latexmk \
-    texlive \
-    texlive-latex-extra \
-    texlive-fonts-recommended \
-    texlive-fonts-extra \
-    texlive-bibtex-extra \
-    biber \
-    texlive-science \
-    texlive-pictures \
-    texlive-extra-utils \
+    perl \
     python3-pygments \
     ghostscript \
     poppler-utils \
-  && apt-get clean && rm -rf /var/lib/apt/lists/*
+    # locales are often needed for proper font encoding
+    locales \
+  && apt-get clean && rm -rf /var/lib/apt/lists/* \
+  && locale-gen en_US.UTF-8
 
-# Non-fatal: some images don't need or support a full fmt run, but it helps when available.
-RUN fmtutil-sys --all || true
+# 2. Copy TeX Live from Stage 1
+# This copies the entire TeX Live directory (usually /usr/local/texlive)
+COPY --from=tex /usr/local/texlive /usr/local/texlive
 
-# A tiny sanity check layer (doesn't run at build time, but documents what's expected)
+# 3. Link TeX Live to your PATH
+# 'tlmgr path add' automatically symlinks the binaries (pdflatex, biber, latexmk, etc.)
+# from the year-specific folder to /usr/local/bin.
+RUN /usr/local/texlive/*/bin/*/tlmgr path add
+
+# 4. Verify Installation
+# We check version output to confirm we are on the latest year.
 CMD ["bash", "-lc", "latexmk -v && pdflatex --version && biber --version"]

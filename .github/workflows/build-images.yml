@@ -62,8 +62,6 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
             # Tag with version file content (e.g., 0.0.1)
             type=raw,value=${{ steps.ver.outputs.version }}
-            # Tag with 'texlive-2024' (or strictly 'bookworm' to be accurate)
-            type=raw,value=texlive-2024
             # Add a sha tag for PRs or debugging
             type=sha,prefix=sha-
 
