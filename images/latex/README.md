@@ -10,19 +10,17 @@ LaTeX development toolchain image for VS Code Dev Containers.
 - `python3-pygments` (for minted workflows)
 - `poppler-utils` / `ghostscript` (PDF utilities)
 
+## ⚠️ Known Limitations
+- **Documentation Removed:** To save ~3GB of space, the `texdoc` command and all TeX package documentation have been removed from this image. If you need to read package documentation, please use [CTAN](https://ctan.org) or `texdoc.org`.
+
 ## Image
 `ghcr.io/roswellcityuk/toolchain-latex`
-
-## Tags
-- `texlive-2024.X.Y`
-- `texlive-2024`
-- `latest`
 
 ## Suggested devcontainer.json
 ```json
 {
   "name": "latex",
-  "image": "ghcr.io/roswellcityuk/toolchain-latex:texlive-2024",
+  "image": "ghcr.io/roswellcityuk/toolchain-latex:latest",
   "customizations": {
     "vscode": {
       "extensions": ["james-yu.latex-workshop", "ban.spellright", "valentjn.vscode-ltex"],
