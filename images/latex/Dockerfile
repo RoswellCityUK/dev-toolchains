@@ -1,5 +1,5 @@
 # Stage 1: Upstream TeX Live
-# We pull the official image which contains the full, 2024 TeX Live scheme.
+# We pull the official image which contains the full, latest TeX Live scheme.
 FROM --platform=$TARGETPLATFORM texlive/texlive:latest AS tex
 
 # OPTIMIZATION: Remove docs and source code.
@@ -11,7 +11,7 @@ RUN rm -rf /usr/local/texlive/*/texmf-dist/doc \
 FROM mcr.microsoft.com/devcontainers/base:bookworm
 
 LABEL org.opencontainers.image.source=https://github.com/roswellcityuk/dev-toolchains
-LABEL org.opencontainers.image.description="LaTeX Dev Container based on Debian Bookworm (2024 TeX Live)"
+LABEL org.opencontainers.image.description="LaTeX Dev Container based on Debian Bookworm (latest TeX Live)"
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=en_US.UTF-8 \
