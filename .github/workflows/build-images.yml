@@ -109,7 +109,7 @@ jobs:
         if: steps.should_run.outputs.run == 'true' && github.event_name != 'pull_request'
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'ghcr.io/roswellcityuk/toolchain-${{ matrix.image }}:${{ steps.ver.outputs.version }}'
+          image-ref: 'ghcr.io/roswellcityuk/dev-toolchains/toolchain-${{ matrix.image }}:${{ steps.ver.outputs.version }}'
           format: 'table'
           exit-code: '0' # Don't fail the build, just report
           ignore-unfixed: true
