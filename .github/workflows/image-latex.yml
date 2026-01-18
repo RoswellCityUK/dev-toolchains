@@ -44,8 +44,8 @@ jobs:
           context: images/latex
           push: true
           tags: |
-            ghcr.io/${{ toLower(github.repository_owner) }}/toolchain-latex:texlive-2024.${{ steps.ver.outputs.version }}
-            ghcr.io/${{ toLower(github.repository_owner) }}/toolchain-latex:texlive-2024
-            ghcr.io/${{ toLower(github.repository_owner) }}/toolchain-latex:latest
+            ghcr.io/${{ github.repository_owner }}/toolchain-latex:texlive-2024.${{ steps.ver.outputs.version }}
+            ghcr.io/${{ github.repository_owner }}/toolchain-latex:texlive-2024
+            ghcr.io/${{ github.repository_owner }}/toolchain-latex:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
