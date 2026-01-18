@@ -25,8 +25,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
     LC_ALL=en_US.UTF-8
 
 # Faster apt with BuildKit cache mounts (no effect if BuildKit disabled)
-RUN --mount=type=cache,id=apt-cache-${TARGETARCH},target=/var/cache/apt \
-    --mount=type=cache,id=apt-lists-${TARGETARCH},target=/var/lib/apt/lists \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates \
       git \
