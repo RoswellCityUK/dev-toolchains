@@ -74,7 +74,7 @@ jobs:
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=raw,value=${{ steps.ver.outputs.version }}
-            type=sha,prefix=sha-,format=short
+            type=sha,prefix=${{ steps.ver.outputs.version }}.sha-,format=short
 
       - name: Set up QEMU
         if: steps.should_run.outputs.run == 'true'
