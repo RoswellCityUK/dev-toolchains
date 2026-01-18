@@ -1,4 +1,4 @@
-ORG ?= yourname
+ORG ?= roswellcityuk
 REGISTRY ?= ghcr.io/$(ORG)
 
 LATEX_IMAGE := $(REGISTRY)/toolchain-latex

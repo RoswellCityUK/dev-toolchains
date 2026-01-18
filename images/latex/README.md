@@ -11,7 +11,7 @@ LaTeX development toolchain image for VS Code Dev Containers.
 - `poppler-utils` / `ghostscript` (PDF utilities)
 
 ## Image
-`ghcr.io/RoswellCityUk/toolchain-latex`
+`ghcr.io/roswellcityuk/toolchain-latex`
 
 ## Tags
 - `texlive-2024.X.Y`
@@ -22,7 +22,7 @@ LaTeX development toolchain image for VS Code Dev Containers.
 ```json
 {
   "name": "latex",
-  "image": "ghcr.io/RoswellCityUk/toolchain-latex:texlive-2024",
+  "image": "ghcr.io/roswellcityuk/toolchain-latex:texlive-2024",
   "customizations": {
     "vscode": {
       "extensions": ["james-yu.latex-workshop"],
