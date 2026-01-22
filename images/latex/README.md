@@ -34,3 +34,8 @@ LaTeX development toolchain image for VS Code Dev Containers.
   },
   "remoteUser": "vscode"
 }
+```
+
+## Preview
+
+![Preview of the workspace](./docs/preview.png)
