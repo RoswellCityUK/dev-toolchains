@@ -15,13 +15,13 @@ LaTeX development toolchain image for VS Code Dev Containers.
 - The vscode user has passwordless sudo access. To install missing TeX packages, use: sudo tlmgr install <package_name>
 
 ## Image
-`ghcr.io/roswellcityuk/toolchain-latex`
+`ghcr.io/roswellcityuk/dev-toolchains/toolchain-latex`
 
 ## Suggested devcontainer.json
 ```json
 {
   "name": "latex",
-  "image": "ghcr.io/roswellcityuk/toolchain-latex:latest",
+  "image": "ghcr.io/roswellcityuk/dev-toolchains/toolchain-latex:latest",
   "customizations": {
     "vscode": {
       "extensions": ["james-yu.latex-workshop", "ban.spellright", "valentjn.vscode-ltex"],
