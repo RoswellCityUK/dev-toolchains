@@ -28,13 +28,31 @@ LaTeX development toolchain image for VS Code Dev Containers.
       "settings": {
         "latex-workshop.latex.autoBuild.run": "onSave",
         "latex-workshop.latex.outDir": "%DIR%/out",
-        "latex-workshop.view.pdf.viewer": "tab"
+        "latex-workshop.view.pdf.viewer": "tab",
+        "latex-workshop.latex.recipes": [
+          {
+            "name": "Markdown -> PDF (Pandoc)",
+            "tools": ["pandoc"]
+          }
+        ],
+        "latex-workshop.latex.tools": [
+          {
+            "name": "pandoc",
+            "command": "pandoc",
+            "args": [
+              "%DOC%.md",
+              "-o",
+              "%DOC%.pdf",
+              "--from=markdown",
+              "--pdf-engine=pdflatex"
+            ]
+          }
+        ]
       }
     }
   },
   "remoteUser": "vscode"
 }
-```
 
 ## Preview
 

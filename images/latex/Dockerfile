@@ -29,6 +29,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     perl \
     python3-pygments \
     ghostscript \
+    pandoc \
     hunspell \
     hunspell-en-us \
     poppler-utils \
