@@ -1,4 +1,4 @@
-name: Build & Publish Images (Native)
+name: Build & Publish Images
 
 on:
   push:
@@ -14,27 +14,16 @@ permissions:
 
 jobs:
   # -------------------------------------------------------------------------
-  # JOB 1: Base Platform (Native Builders)
+  # JOB 1: Base Platform
   # -------------------------------------------------------------------------
   build-base:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - runner: ubuntu-24.04
-            platform: linux/amd64
-            suffix: amd64
-          - runner: ubuntu-24.04-arm
-            platform: linux/arm64
-            suffix: arm64
-
-    runs-on: ${{ matrix.runner }}
+    runs-on: ubuntu-latest
     outputs:
       texlive_version: ${{ steps.get_ver.outputs.year }}
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Detect TeX Live Version
         id: get_ver
@@ -42,8 +31,7 @@ jobs:
           YEAR=$(grep -oP '/usr/local/texlive/\K\d{4}' images/base-tex/Dockerfile | head -1)
           echo "year=$YEAR" >> $GITHUB_OUTPUT
 
-      - name: Filter Paths
-        uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: |
@@ -77,66 +65,39 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: images/base-tex
-          platforms: ${{ matrix.platform }}
-          tags: ghcr.io/${{ env.REPO_LOWER }}/base-tex:latest-${{ matrix.suffix }}
+          platforms: linux/amd64
+          tags: |
+            ghcr.io/${{ env.REPO_LOWER }}/base-tex:latest
+            ghcr.io/${{ env.REPO_LOWER }}/base-tex:texlive-${{ steps.get_ver.outputs.year }}
           push: ${{ github.event_name != 'pull_request' }}
-          cache-from: type=gha,scope=base-${{ matrix.suffix }}
-          cache-to: type=gha,mode=max,scope=base-${{ matrix.suffix }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   # -------------------------------------------------------------------------
-  # JOB 2: Merge Base Manifests
-  # -------------------------------------------------------------------------
-  merge-base:
-    needs: build-base
-    runs-on: ubuntu-latest
-    if: needs.build-base.result == 'success'
-    steps:
-      - name: Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create Manifest List
-        run: |
-          REPO_LOWER=${GITHUB_REPOSITORY,,}
-          docker buildx imagetools create -t ghcr.io/$REPO_LOWER/base-tex:latest \
-            ghcr.io/$REPO_LOWER/base-tex:latest-amd64 \
-            ghcr.io/$REPO_LOWER/base-tex:latest-arm64
-
-          docker buildx imagetools create -t ghcr.io/$REPO_LOWER/base-tex:texlive-${{ needs.build-base.outputs.texlive_version }} \
-            ghcr.io/$REPO_LOWER/base-tex:latest-amd64 \
-            ghcr.io/$REPO_LOWER/base-tex:latest-arm64
-
-  # -------------------------------------------------------------------------
-  # JOB 3: Toolchains (Native Builders)
+  # JOB 2: Toolchains
   # -------------------------------------------------------------------------
   build-toolchains:
-    needs: [build-base, merge-base]
+    needs: build-base
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
-        # Cross-product: 2 Images x 2 Architectures
-        image: [latex, quarto]
-        arch:
-          - { runner: ubuntu-24.04, platform: linux/amd64, suffix: amd64 }
-          - { runner: ubuntu-24.04-arm, platform: linux/arm64, suffix: arm64 }
         include:
           - image: latex
             context: images/toolchain-latex
+            description: "LaTeX toolchain (VS Code Optimized)"
             depends_on_base_tex: true
           - image: quarto
             context: images/toolchain-quarto
+            description: "Quarto Publishing Toolchain"
             depends_on_base_tex: true
 
-    runs-on: ${{ matrix.arch.runner }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - name: Filter Paths
-        uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: |
@@ -153,6 +114,29 @@ jobs:
       - name: Lowercase Repository Name
         if: steps.should_run.outputs.run == 'true'
         run: echo "REPO_LOWER=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
+
+      - name: Read Version
+        if: steps.should_run.outputs.run == 'true'
+        id: ver
+        run: echo "version=$(cat ${{ matrix.context }}/VERSION)" >> $GITHUB_OUTPUT
+
+      - name: Docker Metadata
+        if: steps.should_run.outputs.run == 'true'
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ env.REPO_LOWER }}/toolchain-${{ matrix.image }}
+          labels: |
+            org.opencontainers.image.title=Toolchain ${{ matrix.image }}
+            org.opencontainers.image.description=${{ matrix.description }}
+            org.opencontainers.image.version=${{ steps.ver.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            ${{ matrix.depends_on_base_tex == true && format('org.opencontainers.image.base.texlive={0}', needs.build-base.outputs.texlive_version) || '' }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=${{ steps.ver.outputs.version }}
+            type=sha,prefix=${{ steps.ver.outputs.version }}.sha-,format=short
+            type=raw,value=texlive-${{ needs.build-base.outputs.texlive_version }},enable=${{ matrix.depends_on_base_tex }}
 
       - name: Set up Docker Buildx
         if: steps.should_run.outputs.run == 'true'
@@ -171,32 +155,9 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}
-          platforms: ${{ matrix.arch.platform }}
-          tags: ghcr.io/${{ env.REPO_LOWER }}/toolchain-${{ matrix.image }}:latest-${{ matrix.arch.suffix }}
+          platforms: linux/amd64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           push: ${{ github.event_name != 'pull_request' }}
-          cache-from: type=gha,scope=${{ matrix.image }}-${{ matrix.arch.suffix }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.image }}-${{ matrix.arch.suffix }}
-
-  # -------------------------------------------------------------------------
-  # JOB 4: Merge Toolchain Manifests
-  # -------------------------------------------------------------------------
-  merge-toolchains:
-    needs: build-toolchains
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        image: [latex, quarto]
-    steps:
-      - name: Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create Manifest List
-        run: |
-          REPO_LOWER=${GITHUB_REPOSITORY,,}
-          docker buildx imagetools create -t ghcr.io/$REPO_LOWER/toolchain-${{ matrix.image }}:latest \
-            ghcr.io/$REPO_LOWER/toolchain-${{ matrix.image }}:latest-amd64 \
-            ghcr.io/$REPO_LOWER/toolchain-${{ matrix.image }}:latest-arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
