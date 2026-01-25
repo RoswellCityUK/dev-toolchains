@@ -19,9 +19,20 @@ jobs:
   build-base:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    outputs:
+      texlive_version: ${{ steps.get_ver.outputs.year }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Detect TeX Live Version
+        id: get_ver
+        run: |
+          # Finds the first occurrence of 4 digits after texlive/
+          YEAR=$(grep -oP '/usr/local/texlive/\K\d{4}' images/base-tex/Dockerfile | head -1)
+          echo "Detected TeX Live Year: $YEAR"
+          echo "year=$YEAR" >> $GITHUB_OUTPUT
 
       - name: Filter Paths
         uses: dorny/paths-filter@v3
@@ -64,7 +75,9 @@ jobs:
         with:
           context: images/base-tex
           platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/arm64' }}
-          tags: ghcr.io/${{ env.REPO_LOWER }}/base-tex:latest
+          tags: |
+            ghcr.io/${{ env.REPO_LOWER }}/base-tex:latest
+            ghcr.io/${{ env.REPO_LOWER }}/base-tex:texlive-${{ steps.get_ver.outputs.year }}
           push: ${{ github.event_name != 'pull_request' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -83,9 +96,15 @@ jobs:
           - image: latex
             context: images/toolchain-latex
             description: "LaTeX toolchain (VS Code Optimized)"
+            depends_on_base_tex: true
+
           - image: quarto
             context: images/toolchain-quarto
             description: "Quarto Publishing Toolchain"
+            depends_on_base_tex: true
+          # - image: python-tools
+          #   context: images/toolchain-python
+          #   depends_on_base_tex: false
 
     steps:
       - name: Checkout
@@ -98,7 +117,7 @@ jobs:
           filters: |
             src:
               - '${{ matrix.context }}/**'
-              - 'images/base-tex/**'
+              - '${{ matrix.depends_on_base_tex == true && 'images/base-tex/**' || '' }}'
               - '.github/workflows/build-images.yml'
 
       - name: Should run?
@@ -127,10 +146,12 @@ jobs:
             org.opencontainers.image.description=${{ matrix.description }}
             org.opencontainers.image.version=${{ steps.ver.outputs.version }}
             org.opencontainers.image.revision=${{ github.sha }}
+            ${{ matrix.depends_on_base_tex == true && format('org.opencontainers.image.base.texlive={0}', needs.build-base.outputs.texlive_version) || '' }}
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=raw,value=${{ steps.ver.outputs.version }}
             type=sha,prefix=${{ steps.ver.outputs.version }}.sha-,format=short
+            type=raw,value=texlive-${{ needs.build-base.outputs.texlive_version }},enable=${{ matrix.depends_on_base_tex }}
 
       - name: Set up QEMU
         if: steps.should_run.outputs.run == 'true'
