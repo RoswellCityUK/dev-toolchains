@@ -20,7 +20,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-
       - name: Checkout
         uses: actions/checkout@v6
 
@@ -37,6 +36,11 @@ jobs:
         id: should_run
         if: steps.filter.outputs.src == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         run: echo "run=true" >> $GITHUB_OUTPUT
+
+      - name: Lowercase Repository Name
+        if: steps.should_run.outputs.run == 'true'
+        run: |
+          echo "REPO_LOWER=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
 
       - name: Set up QEMU
         if: steps.should_run.outputs.run == 'true'
@@ -60,7 +64,8 @@ jobs:
         with:
           context: images/base-tex
           platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/arm64' }}
-          tags: ghcr.io/${{ github.repository }}/base-tex:latest
+          # FIX: Use ${{ env.REPO_LOWER }} instead of github.repository
+          tags: ghcr.io/${{ env.REPO_LOWER }}/base-tex:latest
           push: ${{ github.event_name != 'pull_request' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -102,6 +107,11 @@ jobs:
         if: steps.filter.outputs.src == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         run: echo "run=true" >> $GITHUB_OUTPUT
 
+      - name: Lowercase Repository Name
+        if: steps.should_run.outputs.run == 'true'
+        run: |
+          echo "REPO_LOWER=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
+
       - name: Read Version
         if: steps.should_run.outputs.run == 'true'
         id: ver
@@ -112,7 +122,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }}/toolchain-${{ matrix.image }}
+          images: ghcr.io/${{ env.REPO_LOWER }}/toolchain-${{ matrix.image }}
           labels: |
             org.opencontainers.image.title=Toolchain ${{ matrix.image }}
             org.opencontainers.image.description=${{ matrix.description }}
