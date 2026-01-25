@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/devcontainers/base:bookworm
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-# 1. Install Dependencies
+# Install Dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
@@ -19,7 +19,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
     && locale-gen
 
-# 2. Install TeX Live 2025 (Optimized)
+# Global Configuration
+ENV PATH="/usr/local/texlive/2025/bin/x86_64-linux:/usr/local/texlive/2025/bin/aarch64-linux:${PATH}"
+RUN echo "export PATH=${PATH}" >> /etc/profile
+
+# Install TeX Live 2025 (Optimized)
 COPY texlive.profile /tmp/texlive.profile
 RUN mkdir /tmp/install-tl-unx \
     && wget -qO- https://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz \
@@ -31,11 +35,7 @@ RUN mkdir /tmp/install-tl-unx \
     && /usr/local/texlive/2025/bin/*/luaotfload-tool --update \
     && rm -rf /tmp/install-tl-unx /tmp/texlive.profile
 
-# 3. Global Configuration
-ENV PATH="/usr/local/texlive/2025/bin/x86_64-linux:/usr/local/texlive/2025/bin/aarch64-linux:${PATH}"
-RUN echo "export PATH=${PATH}" >> /etc/profile
-
-# 4. Verification
+# Verification
 RUN tlmgr --version && pdflatex --version
 
 LABEL org.opencontainers.image.source=https://github.com/roswellcityuk/dev-toolchains
