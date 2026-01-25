@@ -4,8 +4,6 @@ LaTeX development toolchain image for VS Code Dev Containers.
 
 ## Includes
 - TeX Live (Full distribution)
-- `pandoc` (Markdown to PDF conversion)
-- **Eisvogel** LaTeX template for professional Markdown-based PDFs
 - `latexmk` & `biber`
 - common TeX bundles: latex-extra, fonts, pictures, science
 - `python3-pygments` (for minted workflows)
@@ -19,7 +17,7 @@ LaTeX development toolchain image for VS Code Dev Containers.
 `ghcr.io/roswellcityuk/dev-toolchains/toolchain-latex`
 
 ## Suggested devcontainer.json
-Copy this into your `.devcontainer/devcontainer.json` to enable automatic "Build on Save" for both LaTeX (`.tex`) and Markdown (`.md`) files.
+Copy this into your `.devcontainer/devcontainer.json` to enable automatic "Build on Save" for both LaTeX (`.tex`) files.
 
 ```json
 {
@@ -35,10 +33,6 @@ Copy this into your `.devcontainer/devcontainer.json` to enable automatic "Build
           {
             "name": "latexmk",
             "tools": ["latexmk"]
-          },
-          {
-            "name": "Markdown -> PDF (Pandoc + Eisvogel)",
-            "tools": ["pandoc"]
           }
         ],
         "latex-workshop.latex.tools": [
@@ -50,22 +44,9 @@ Copy this into your `.devcontainer/devcontainer.json` to enable automatic "Build
               "-interaction=nonstopmode",
               "-file-line-error",
               "-pdf",
-              "-outdir=%DIR%/../out", 
+              "-outdir=%DIR%/../out",
               "-shell-escape",
               "%DOC%"
-            ]
-          },
-          {
-            "name": "pandoc",
-            "command": "pandoc",
-            "args": [
-              "%DOC%.md",
-              "-o",
-              "%DIR%/../out/%DOCFILE%.pdf",
-              "--from=markdown",
-              "--template=eisvogel",
-              "--listings",
-              "--pdf-engine=pdflatex"
             ]
           }
         ]
