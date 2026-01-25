@@ -64,7 +64,6 @@ jobs:
         with:
           context: images/base-tex
           platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/arm64' }}
-          # FIX: Use ${{ env.REPO_LOWER }} instead of github.repository
           tags: ghcr.io/${{ env.REPO_LOWER }}/base-tex:latest
           push: ${{ github.event_name != 'pull_request' }}
           cache-from: type=gha

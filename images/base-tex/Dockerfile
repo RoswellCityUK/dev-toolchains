@@ -1,5 +1,7 @@
 FROM mcr.microsoft.com/devcontainers/base:bookworm
 
+ARG DEBIAN_FRONTEND=noninteractive
+
 # 1. Install Dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
