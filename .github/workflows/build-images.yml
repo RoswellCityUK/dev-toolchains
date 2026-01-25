@@ -20,7 +20,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: dorny/paths-filter@v3
+      - name: Checkout
+        if: steps.should_run.outputs.run == 'true'
+        uses: actions/checkout@v6
+
+      - name: Filter Paths
+        uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: |
@@ -32,10 +37,6 @@ jobs:
         id: should_run
         if: steps.filter.outputs.src == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         run: echo "run=true" >> $GITHUB_OUTPUT
-
-      - name: Checkout
-        if: steps.should_run.outputs.run == 'true'
-        uses: actions/checkout@v6
 
       - name: Set up QEMU
         if: steps.should_run.outputs.run == 'true'
@@ -83,7 +84,12 @@ jobs:
             description: "Quarto Publishing Toolchain"
 
     steps:
-      - uses: dorny/paths-filter@v3
+      - name: Checkout
+        if: steps.should_run.outputs.run == 'true'
+        uses: actions/checkout@v6
+
+      - name: Filter Paths
+        uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: |
@@ -96,10 +102,6 @@ jobs:
         id: should_run
         if: steps.filter.outputs.src == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         run: echo "run=true" >> $GITHUB_OUTPUT
-
-      - name: Checkout
-        if: steps.should_run.outputs.run == 'true'
-        uses: actions/checkout@v6
 
       - name: Read Version
         if: steps.should_run.outputs.run == 'true'
