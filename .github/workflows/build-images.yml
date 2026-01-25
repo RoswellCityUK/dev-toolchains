@@ -20,6 +20,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
+      - name: Should run?
+        id: should_run
+        if: steps.filter.outputs.src == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: echo "run=true" >> $GITHUB_OUTPUT
+
       - name: Checkout
         if: steps.should_run.outputs.run == 'true'
         uses: actions/checkout@v6
@@ -32,11 +37,6 @@ jobs:
             src:
               - 'images/base-tex/**'
               - '.github/workflows/build-images.yml'
-
-      - name: Should run?
-        id: should_run
-        if: steps.filter.outputs.src == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-        run: echo "run=true" >> $GITHUB_OUTPUT
 
       - name: Set up QEMU
         if: steps.should_run.outputs.run == 'true'
@@ -84,6 +84,11 @@ jobs:
             description: "Quarto Publishing Toolchain"
 
     steps:
+      - name: Should run?
+        id: should_run
+        if: steps.filter.outputs.src == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: echo "run=true" >> $GITHUB_OUTPUT
+
       - name: Checkout
         if: steps.should_run.outputs.run == 'true'
         uses: actions/checkout@v6
@@ -97,11 +102,6 @@ jobs:
               - '${{ matrix.context }}/**'
               - 'images/base-tex/**'
               - '.github/workflows/build-images.yml'
-
-      - name: Should run?
-        id: should_run
-        if: steps.filter.outputs.src == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-        run: echo "run=true" >> $GITHUB_OUTPUT
 
       - name: Read Version
         if: steps.should_run.outputs.run == 'true'
