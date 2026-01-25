@@ -6,6 +6,11 @@ updates:
     schedule:
       interval: "weekly"
 
+  - package-ecosystem: "docker"
+    directory: "/images/quarto"
+    schedule:
+      interval: "weekly"
+
   # Maintain GitHub Actions in the workflow
   - package-ecosystem: "github-actions"
     directory: "/"

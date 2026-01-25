@@ -11,6 +11,7 @@ setup-builder:
 build-%: setup-builder
 	$(eval VERSION := $(shell cat images/$*/VERSION))
 	docker buildx build --load \
+		--platform linux/amd64,linux/arm64 \
 		-t $(REGISTRY)/toolchain-$*:$(VERSION) \
 		-t $(REGISTRY)/toolchain-$*:latest \
 		images/$*
