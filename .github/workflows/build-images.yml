@@ -23,6 +23,9 @@ jobs:
           - image: latex
             context: images/latex
             description: "LaTeX toolchain based on TeX Live and Debian"
+          - image: quarto
+            context: images/quarto
+            description: "Markdown to KDP (Print/eBook) toolchain"
 
     steps:
       - name: Checkout
