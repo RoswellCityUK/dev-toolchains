@@ -21,11 +21,16 @@ Use this configuration for a seamless writing experience with **Live Preview**.
     "vscode": {
       "extensions": [
         "quarto.quarto",
-        "yzhang.markdown-all-in-one"
+        "yzhang.markdown-all-in-one",
+        "streetsidesoftware.code-spell-checker",
+        "valentjn.vscode-ltex",
+        "davidanson.vscode-markdownlint"
       ],
       "settings": {
         "quarto.render.onSave": true,
-        "editor.wordWrap": "on"
+        "editor.wordWrap": "on",
+        "ltex.language": "en-US",
+        "ltex.java.path": "/usr/bin/java"
       }
     }
   },
