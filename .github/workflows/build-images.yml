@@ -28,7 +28,7 @@ jobs:
       - name: Detect TeX Live Version
         id: get_ver
         run: |
-          YEAR=$(grep -oP '/usr/local/texlive/\K\d{4}' images/base-tex/Dockerfile | head -1)
+          YEAR=$(grep -oP 'ARG TL_YEAR=\K\d{4}' images/base-tex/Dockerfile)
           echo "year=$YEAR" >> $GITHUB_OUTPUT
 
       - uses: dorny/paths-filter@v3
