@@ -1,11 +1,10 @@
-# images/base-tex/Dockerfile
-FROM mcr.microsoft.com/devcontainers/base:bookworm
+ARG BASE_IMAGE=mcr.microsoft.com/devcontainers/base:bookworm
+FROM ${BASE_IMAGE}
 
 ARG TL_YEAR=2025
-# Silence apt warnings
 ARG DEBIAN_FRONTEND=noninteractive
 
-# 1. Install Dependencies
+# Install Dependencies
 RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -25,11 +24,11 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
     && locale-gen
 
-# 2. Set PATH
+# Set PATH
 ENV PATH="/usr/local/texlive/${TL_YEAR}/bin/x86_64-linux:${PATH}"
 RUN echo "export PATH=${PATH}" >> /etc/profile
 
-# 3. Install TeX Live
+# 3Install TeX Live
 COPY texlive.profile /tmp/texlive.profile
 # Replace YEAR placeholder in profile before installing
 RUN sed -i "s/YEAR/${TL_YEAR}/g" /tmp/texlive.profile \
@@ -43,7 +42,7 @@ RUN sed -i "s/YEAR/${TL_YEAR}/g" /tmp/texlive.profile \
     && luaotfload-tool --update \
     && rm -rf /tmp/install-tl-unx /tmp/texlive.profile
 
-# 4. Verification
+# Verification
 RUN tlmgr --version && pdflatex --version
 
 LABEL org.opencontainers.image.source=https://github.com/roswellcityuk/dev-toolchains
