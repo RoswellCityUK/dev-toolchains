@@ -1,6 +1,7 @@
 # images/base-tex/Dockerfile
 FROM mcr.microsoft.com/devcontainers/base:bookworm
 
+ARG TL_YEAR=2025
 # Silence apt warnings
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -21,12 +22,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && locale-gen
 
 # 2. Set PATH
-ENV PATH="/usr/local/texlive/2025/bin/x86_64-linux:${PATH}"
+ENV PATH="/usr/local/texlive/${TL_YEAR}/bin/x86_64-linux:${PATH}"
 RUN echo "export PATH=${PATH}" >> /etc/profile
 
-# 3. Install TeX Live 2025
+# 3. Install TeX Live
 COPY texlive.profile /tmp/texlive.profile
-RUN mkdir /tmp/install-tl-unx \
+# Replace YEAR placeholder in profile before installing
+RUN sed -i "s/YEAR/${TL_YEAR}/g" /tmp/texlive.profile \
+    && mkdir /tmp/install-tl-unx \
     && wget -qO- https://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz \
     | tar -xz -C /tmp/install-tl-unx --strip-components=1 \
     && /tmp/install-tl-unx/install-tl --profile=/tmp/texlive.profile \

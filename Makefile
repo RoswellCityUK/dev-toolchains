@@ -14,7 +14,7 @@ build-%: setup-builder
 		-t $(REGISTRY)/toolchain-$*:latest \
 		images/$*
 
-push-%:
+push-%: build-%
 	$(eval VERSION := $(shell cat images/$*/VERSION))
 	docker push $(REGISTRY)/toolchain-$*:$(VERSION)
 	docker push $(REGISTRY)/toolchain-$*:latest
