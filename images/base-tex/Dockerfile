@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
     && locale-gen
 
-# 2. Set PATH (Simpler now: only x86_64)
+# 2. Set PATH
 ENV PATH="/usr/local/texlive/2025/bin/x86_64-linux:${PATH}"
 RUN echo "export PATH=${PATH}" >> /etc/profile
 

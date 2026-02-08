@@ -8,7 +8,7 @@ This repository uses a **tiered build strategy** to maximize caching and minimiz
 
 1.  **Platform (Base):** `base-tex`
     * **OS:** Debian Bookworm (via Microsoft DevContainers base)
-    * **Core:** TeX Live 2025 (Custom Profile, No Docs, Multi-arch)
+    * **Core:** TeX Live 2025 (Custom Profile, No Docs, AMD64 Only)
     * **Common:** Git, Python (Pygments), Curl, Locales
 2.  **Toolchains:**
     * `toolchain-latex`: Adds Build Tools (Make, Java), PDF Utils (Ghostscript), and VS Code helpers.

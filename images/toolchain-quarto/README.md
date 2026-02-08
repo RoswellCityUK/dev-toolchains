@@ -7,7 +7,7 @@ A comprehensive publishing toolchain designed for **Amazon KDP (Print & eBook)**
 * **PDF Engine:** TeX Live 2025 (via `toolchain-latex` base).
 * **Graphics:** `librsvg2` for SVG rendering in PDFs.
 * **Syntax:** `python3-pygments` for code block highlighting.
-* **Multi-Arch:** Native support for Apple Silicon (ARM64) and Intel (AMD64).
+* **Arch:** Native support for Intel (AMD64).
 
 ## 🛠 Usage: .devcontainer/devcontainer.json
 
