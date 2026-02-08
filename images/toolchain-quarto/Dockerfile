@@ -59,7 +59,6 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
 # ---------------------------------------------------------------------------
 # 3. GO (Kernel: gonb)
 # ---------------------------------------------------------------------------
-# Debian 12's native Go is too old for some kernels, so we fetch standard Go
 ENV GOPATH=/go
 ENV PATH=$GOPATH/bin:/usr/local/go/bin:$PATH
 
@@ -68,8 +67,12 @@ RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH" \
     && wget -q "https://go.dev/dl/${GO_LATEST}.linux-amd64.tar.gz" \
     && tar -C /usr/local -xzf "${GO_LATEST}.linux-amd64.tar.gz" \
     && rm "${GO_LATEST}.linux-amd64.tar.gz" \
+    && GOBIN=/usr/local/bin go install golang.org/x/tools/cmd/goimports@latest \
+    && GOBIN=/usr/local/bin go install golang.org/x/tools/gopls@latest \
     && GOBIN=/usr/local/bin go install github.com/janpfeifer/gonb@latest \
-    && /usr/local/bin/gonb --install
+    && /usr/local/bin/gonb --install \
+    && mkdir -p /usr/local/share/jupyter/kernels \
+    && mv /root/.local/share/jupyter/kernels/gonb /usr/local/share/jupyter/kernels/gonb
 
 # ---------------------------------------------------------------------------
 # 4. .NET C# / F# (Kernel: .NET Interactive)
