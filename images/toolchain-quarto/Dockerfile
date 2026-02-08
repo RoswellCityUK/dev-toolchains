@@ -26,9 +26,16 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     wget \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install Jupyter and standard Python Data Science libs
-# This enables {python} and {sql} chunks in Quarto
-RUN pip3 install --no-cache-dir \
+# SETUP GLOBAL VIRTUAL ENVIRONMENT
+# 1. Create the venv in /opt/venv
+# 2. Add it to the PATH so 'python' and 'pip' commands automatically use it
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv $VIRTUAL_ENV \
+    && chmod -R a+w $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# Install Jupyter and libs
+RUN pip install --no-cache-dir \
     jupyterlab \
     notebook \
     pandas \
