@@ -1,9 +1,10 @@
-# images/toolchain-quarto/Dockerfile
 ARG BASE_IMAGE=ghcr.io/roswellcityuk/dev-toolchains/base-tex:latest
 FROM ${BASE_IMAGE}
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # ---------------------------------------------------------------------------
-# 1. CORE ESSENTIALS: Python, Jupyter, Java, Graphviz
+# CORE ESSENTIALS: Python, Jupyter, Java, Graphviz
 # ---------------------------------------------------------------------------
 # - python3-pip / venv: Required for Jupyter
 # - default-jre-headless: Required for LTeX (grammar checking)
@@ -42,10 +43,12 @@ RUN pip install --no-cache-dir \
     matplotlib \
     numpy \
     ipython-sql \
-    sqlalchemy
+    sqlalchemy \
+    pyyaml \
+    pypdf
 
 # ---------------------------------------------------------------------------
-# 2. RUST (Kernel: evcxr)
+# RUST (Kernel: evcxr)
 # ---------------------------------------------------------------------------
 ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
@@ -57,7 +60,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
     && evcxr_jupyter --install
 
 # ---------------------------------------------------------------------------
-# 3. GO (Kernel: gonb)
+# GO (Kernel: gonb)
 # ---------------------------------------------------------------------------
 ENV GOPATH=/go
 ENV PATH=$GOPATH/bin:/usr/local/go/bin:$PATH
@@ -75,7 +78,7 @@ RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH" \
     && mv /root/.local/share/jupyter/kernels/gonb /usr/local/share/jupyter/kernels/gonb
 
 # ---------------------------------------------------------------------------
-# 4. .NET C# / F# (Kernel: .NET Interactive)
+# .NET C# / F# (Kernel: .NET Interactive)
 # ---------------------------------------------------------------------------
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 ENV DOTNET_INSTALL_DIR=/usr/share/dotnet
@@ -88,7 +91,7 @@ RUN curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel L
     && /usr/local/bin/dotnet-interactive jupyter install
 
 # ---------------------------------------------------------------------------
-# 5. QUARTO INSTALLATION
+# QUARTO INSTALLATION
 # ---------------------------------------------------------------------------
 ARG QUARTO_VER="1.8.27"
 RUN curl -LO "https://github.com/quarto-dev/quarto-cli/releases/download/v${QUARTO_VER}/quarto-${QUARTO_VER}-linux-amd64.deb" \
@@ -97,3 +100,23 @@ RUN curl -LO "https://github.com/quarto-dev/quarto-cli/releases/download/v${QUAR
     && quarto check install
 
 LABEL org.opencontainers.image.source=https://github.com/roswellcityuk/dev-toolchains
+
+# ---------------------------------------------------------------------------
+# SCAFFOLDING TOOLS
+# ---------------------------------------------------------------------------
+# Create a directory for custom scripts
+RUN mkdir -p /opt/tools/scripts
+
+# 1. Copy the scripts
+COPY scripts/kdp_specs.py /opt/tools/scripts/kdp_specs.py
+COPY scripts/scaffold_project.py /opt/tools/scripts/scaffold-project
+COPY scripts/check_project.py /opt/tools/scripts/check-project
+COPY scripts/build_release.py /opt/tools/scripts/build-release
+
+# 3. Make them executable and symlink to bin
+RUN chmod +x /opt/tools/scripts/scaffold-project \
+    && ln -s /opt/tools/scripts/scaffold-project /usr/local/bin/scaffold-project
+RUN chmod +x /opt/tools/scripts/check-project \
+    && ln -s /opt/tools/scripts/check-project /usr/local/bin/check-project
+RUN chmod +x /opt/tools/scripts/build-release \
+    && ln -s /opt/tools/scripts/build-release /usr/local/bin/build-release
