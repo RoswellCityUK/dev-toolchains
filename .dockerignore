@@ -1,0 +1,7 @@
+.git
+.github
+.devcontainer
+**/*.md
+**/*.png
+LICENSE
+Makefile
