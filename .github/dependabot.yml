@@ -2,12 +2,12 @@ version: 2
 updates:
   # Maintain Dockerfile base image LateX toolchain
   - package-ecosystem: "docker"
-    directory: "/images/latex"
+    directory: "/images/toolchain-latex"
     schedule:
       interval: "weekly"
 
   - package-ecosystem: "docker"
-    directory: "/images/quarto"
+    directory: "/images/toolchain-quarto"
     schedule:
       interval: "weekly"
 
